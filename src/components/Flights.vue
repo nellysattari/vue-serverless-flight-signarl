@@ -42,6 +42,7 @@ export default {
     };
   },
   created: function() {
+    let _this=this;
     let defaultFlight = {
       geography: {
         latitude: 43.5033,
@@ -84,9 +85,8 @@ export default {
     };
     this.flights.push(defaultFlight);
 
-    this.hubConnection.on('flightUpdated', this.flightUpdated);
- 
     this.getConnectionInfo().then(function(info) {
+
       let accessToken = info.accessToken;
       const options = {
         accessTokenFactory: function() {
@@ -99,34 +99,27 @@ export default {
               return info.accessToken
             })
           }
-        } 
+        }
       }
 
-    this.hubConnection = new signalR.HubConnectionBuilder()
-       .withUrl(info.url, options, {
-        withCredentials: true
-      })
-      .build();
+      _this.hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl(info.url, options, {
+          withCredentials: true
+        })
+        .build();
+      
+      _this.hubConnection.on('flightUpdated', _this.flightUpdated);
+      _this.hubConnection
+              .start()
+              .then(() => {
+                console.log("connection started");
+              })
+              .catch(e => {
+                console.error(
+                  `An error occurred while connecting to operations hub. Details ${e}`
+                );
+              });
 
-     
-      // startConnection(connection)
-      
-      this.hubConnection
-            .start()
-            .then(() => {
-              console.log("connection started");
-              // this.hubConnection.invoke(
-              //   "broadcastMessage",
-              //   "_SYSTEM_",
-              //   this.username + " JOINED"
-              // );
-            })
-            .catch(e => {
-              console.error(
-                `An error occurred while connecting to operations hub. Details ${e}`
-              );
-            });
-      
     })
   },
   methods: {
@@ -151,18 +144,8 @@ export default {
         });
     },
     flightUpdated(updatedFlight) {
-      // const flight = data.flights.find(f => f.id === updatedFlight.id)
-      // if (flight) {
-      //   Vue.set(flight, 'from', updatedFlight.from)
-      //   Vue.set(flight, 'to', updatedFlight.to)
-      //   Vue.set(flight, 'price', updatedFlight.price)
-      // } else {
       this.flights.push(updatedFlight);
     }
-    // onConnected: function(connection) {
-    //   console.log("connection started");
-    //   connection.send("broadcastMessage", "_SYSTEM_", this.username + "JOINED");
-    // }
   }
 };
 </script>
