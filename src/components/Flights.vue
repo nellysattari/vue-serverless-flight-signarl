@@ -34,7 +34,7 @@ export default {
   name: "Flights",
   data: function() {
     return {
-      apiBaseUrl: "http://localhost:7071",
+      apiBaseUrl: "http://localhost:7071/api",
       show: true,
       hubConnection: HubConnection,
       flights: [],
@@ -84,32 +84,12 @@ export default {
       status: "en-route"
     };
     this.flights.push(defaultFlight);
-
-    this.getConnectionInfo().then(function(info) {
-
-      let accessToken = info.accessToken;
-      const options = {
-        accessTokenFactory: function() {
-          if (accessToken) {
-            const _accessToken = accessToken
-            accessToken = null
-            return _accessToken
-          } else {
-            return getConnectionInfo().then(function(info) {
-              return info.accessToken
-            })
-          }
-        }
-      }
-
-      _this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(info.url, options, {
-          withCredentials: true
-        })
+    this.hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl(`${this.apiBaseUrl}`,{withCredentials:true})
         .build();
       
-      _this.hubConnection.on('flightUpdated', _this.flightUpdated);
-      _this.hubConnection
+     
+      this.hubConnection
               .start()
               .then(() => {
                 console.log("connection started");
@@ -120,7 +100,41 @@ export default {
                 );
               });
 
-    })
+    
+    // this.getConnectionInfo().then(function(info) {
+
+    //   let accessToken = info.accessToken;
+    //   const options = {
+    //     accessTokenFactory: function() {
+    //       if (accessToken) {
+    //         const _accessToken = accessToken
+    //         accessToken = null
+    //         return _accessToken
+    //       } else {
+    //         return getConnectionInfo().then(function(info) {
+    //           return info.accessToken
+    //         })
+    //       }
+    //     }
+    //   }
+
+    //   _this.hubConnection = new signalR.HubConnectionBuilder()
+    //     .withUrl(info.url, options)
+    //     .build();
+      
+    //   _this.hubConnection.on('flightUpdated', _this.flightUpdated);
+    //   _this.hubConnection
+    //           .start()
+    //           .then(() => {
+    //             console.log("connection started");
+    //           })
+    //           .catch(e => {
+    //             console.error(
+    //               `An error occurred while connecting to operations hub. Details ${e}`
+    //             );
+    //           });
+
+    // })
   },
   methods: {
     getFlights() {
@@ -133,9 +147,9 @@ export default {
           return {};
         });
     },
-    getConnectionInfo() {
+    getConnectionInfo2() {
       return axios
-        .get(`${this.apiBaseUrl}/api/SignalRInfo`, { crossdomain: true })
+        .get(`${this.apiBaseUrl}negotiate`, { crossdomain: true })
         .then(function(resp) {
           return resp.data;
         })
