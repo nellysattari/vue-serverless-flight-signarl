@@ -39,7 +39,8 @@ export default {
   name: "Flights",
   data: function() {
     return {
-      apiBaseUrl: "http://localhost:7071/api",
+      // apiBaseUrl: "http://localhost:7071/api",
+      apiBaseUrl: "https://funcappflight.azurewebsites.net/api",
       hubConnection: HubConnection,
       flights: [],
       options:{},
