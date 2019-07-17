@@ -1,22 +1,24 @@
 <template>
   <div>
     <h2 class="text-center" style="margin-top: 0; padding-top: 30px;  ">Flight Center</h2>
-    <h3>Most recent landed flights in Sydney</h3>
+    <h3>Most recent landed flights over the world</h3>
     <div class="container" id="app">
     <div class="row">
-      <div v-for="flight in flights" class="col-md-6 col-lg-4 col-xl-3" style="margin: 16px 0px;">
+      <div v-for="(flight,index) in flights" class="col-md-6 col-lg-4 col-xl-4" style="margin: 16px 0px;">
         <div class="card">
           <div class="card-body">
-            <h4 class="card-title">{{ flight.departure.iataCode }} <i class="fas fa-plane"></i> {{ flight.arrival.iataCode }}</h4>
-
+            
+            <h4 class="card-title"><i class="fas fa-plane-departure"></i> Departure: {{ flight.departure.iataCode }}  </h4>
+            <h4 class="card-title"><i class="fas fa-plane-arrival"></i>  Arrival  : {{ flight.arrival.iataCode }} </h4>
+            <h4 class="card-title status"><span v-if="index==0"> Just</span> {{ flight.status }} </h4>
+            
              <transition name="fade">
-                 <p v-if="show"> Flight No:  {{flight.flight.number}} </p>
+                 <h5 > Flight No:  {{flight.flight.number}} </h5>
              </transition>
 
-             <h4 class="card-title">Airline: {{ flight.airline.iataCode }}  </h4>
-             <h4 class="card-title">{{ flight.status }}  </h4>
-
-             <!-- <h4 class="card-subtitle mb-2" :key="flight.price">${{ flight.price }}</h4> -->
+             <h5 class="card-title">Airline: {{ flight.airline.iataCode }}  </h5>
+             <h5 class="card-subtitle mb-2">Lat: {{ flight.geography.latitude }} <i class="fas fa-globe-asia"></i></h5>
+             <h5 class="card-subtitle mb-2"> Long:{{ flight.geography.longitude }}  <i class="fas fa-globe-asia"></i></h5>
           </div>
         </div>
       </div>
@@ -35,60 +37,17 @@ export default {
   data: function() {
     return {
       apiBaseUrl: "http://localhost:7071/api",
-      show: true,
       hubConnection: HubConnection,
       flights: [],
       options:{}
     };
   },
   created: function() {
-    let _this=this;
-    let defaultFlight = {
-      geography: {
-        latitude: 43.5033,
-        longitude: -79.1297,
-        altitude: 7833.36,
-        direction: 70
-      },
-      speed: {
-        horizontal: 833.4,
-        isGround: 0,
-        vertical: 0
-      },
-      departure: {
-        iataCode: "YHM",
-        icaoCode: "CYHM"
-      },
-      arrival: {
-        iataCode: "YQM",
-        icaoCode: "CYQM"
-      },
-      aircraft: {
-        icaoCode: "B763",
-        regNumber: "CGYAJ",
-        icao24: "C08412"
-      },
-      airline: {
-        iataCode: "W8",
-        icaoCode: "CJT"
-      },
-      flight: {
-        iataNumber: "W8620",
-        icaoNumber: "CJT620",
-        number: "620"
-      },
-      system: {
-        updated: 1513148168,
-        squawk: "0000"
-      },
-      status: "en-route"
-    };
-    this.flights.push(defaultFlight);
     this.hubConnection = new signalR.HubConnectionBuilder()
         .withUrl(`${this.apiBaseUrl}`,{withCredentials:true})
         .build();
       
-     
+      this.hubConnection.on('landedFlight', this.landedFlight);
       this.hubConnection
               .start()
               .then(() => {
@@ -99,66 +58,10 @@ export default {
                   `An error occurred while connecting to operations hub. Details ${e}`
                 );
               });
-
-    
-    // this.getConnectionInfo().then(function(info) {
-
-    //   let accessToken = info.accessToken;
-    //   const options = {
-    //     accessTokenFactory: function() {
-    //       if (accessToken) {
-    //         const _accessToken = accessToken
-    //         accessToken = null
-    //         return _accessToken
-    //       } else {
-    //         return getConnectionInfo().then(function(info) {
-    //           return info.accessToken
-    //         })
-    //       }
-    //     }
-    //   }
-
-    //   _this.hubConnection = new signalR.HubConnectionBuilder()
-    //     .withUrl(info.url, options)
-    //     .build();
-      
-    //   _this.hubConnection.on('flightUpdated', _this.flightUpdated);
-    //   _this.hubConnection
-    //           .start()
-    //           .then(() => {
-    //             console.log("connection started");
-    //           })
-    //           .catch(e => {
-    //             console.error(
-    //               `An error occurred while connecting to operations hub. Details ${e}`
-    //             );
-    //           });
-
-    // })
   },
   methods: {
-    getFlights() {
-      return axios
-        .get(`${this.apiBaseUrl}/api/GetFlights`, { crossdomain: true })
-        .then(function(resp) {
-          return resp.data;
-        })
-        .catch(function() {
-          return {};
-        });
-    },
-    getConnectionInfo2() {
-      return axios
-        .get(`${this.apiBaseUrl}negotiate`, { crossdomain: true })
-        .then(function(resp) {
-          return resp.data;
-        })
-        .catch(function() {
-          return {};
-        });
-    },
-    flightUpdated(updatedFlight) {
-      this.flights.push(updatedFlight);
+    landedFlight(updatedFlight) {
+      this.flights.unshift(updatedFlight);
     }
   }
 };
@@ -167,17 +70,18 @@ export default {
 <style lang="scss" scoped>
 .container .row div:first-child {
   .card {
-    background-color: blueviolet;
+    background-color: azure;
+    border: 2px solid gray;
+    .status{
+        color: red;
+      }
+      .card-title{
+        i{
+          margin-right: 8px; 
+        }
+      }
   }
-}
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter,
-.fade-leave-active {
-  opacity: 0;
-}
+} 
+
 </style>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->

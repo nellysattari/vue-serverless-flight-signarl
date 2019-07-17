@@ -1,12 +1,11 @@
-<!-- <img src="../assets/flight2.jpg" class="img-responsive" alt="Responsive image"> -->
 <template>
   <div class="home container text-center">
+    <img src="../assets/flight2.jpg" class="img-responsive" alt="Responsive image">  
        <Flights/>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
 import Flights from '@/components/Flights.vue'
 
 export default {
